@@ -318,9 +318,23 @@ scanDocumentButton.addEventListener("click", () => {
     // Log a message to the console to check if the button click is registered
     console.log("Scan Document button clicked");
 
-    // Trigger the hidden input for image capture
-    documentImageInput.click();
+    // Request access to the camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+            // Create a video element to display the camera stream
+            const video = document.createElement("video");
+            video.setAttribute("autoplay", true);
+            video.srcObject = stream;
+
+            // Append the video element to the document body
+            document.body.appendChild(video);
+        })
+        .catch((error) => {
+            // Log any errors to the console
+            console.error("Error accessing camera:", error);
+        });
 });
+
 
 
   
