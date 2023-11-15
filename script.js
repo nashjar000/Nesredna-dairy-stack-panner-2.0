@@ -1,5 +1,3 @@
-const documentImageInput = document.getElementById("documentImageInput");
-
 // Function to check if the order number requires palletizing
 function checkPalletOrder(orderNumber) {
     const palletOrderNumbers = ["102", "106", "143", "163", "169"];
@@ -229,176 +227,111 @@ function checkPalletOrder(orderNumber) {
   clearButton.addEventListener("click", function () {
     clearFormAndStacks();
   });
-
-  scanDocumentButton.addEventListener("click", () => {
-    // Trigger the hidden input for image capture
-    documentImageInput.click();
-});
-
-// Listen for changes in the selected image
-documentImageInput.addEventListener("change", handleImageCapture);
-
-function handleImageCapture() {
+  
+  // Function to handle OCR using Tesseract.js
+  async function performOCR(image) {
+    const result = await Tesseract.recognize(
+      image,
+      'eng', // language code, you can change this if needed
+      { logger: (info) => console.log(info) }
+    );
+    return result.data.text.trim();
+  }
+  
+  // Add a change event listener to the documentImageInput
+  documentImageInput.addEventListener("change", handleImageCapture);
+  
+  async function handleImageCapture() {
     const selectedImage = documentImageInput.files[0];
-
+  
     if (selectedImage) {
-        // Perform document processing logic here
-        // You may need to use a third-party library for OCR (Optical Character Recognition)
-        // Extract information from the document and update the order form accordingly
-
-        // For demonstration purposes, simply display the image
         const imageUrl = URL.createObjectURL(selectedImage);
-        alert(`Image captured: ${imageUrl}`);
+  
+        // Perform OCR on the selected image
+        const scannedText = await performOCR(imageUrl);
+  
+        // Extract relevant information from the scanned text
+        const scannedInfo = extractInfoFromOCR(scannedText);
+  
+        // Update the order form with the scanned information
+        updateOrderForm(scannedInfo);
     }
-}
-
-function handleImageCapture() {
-    const selectedImage = documentImageInput.files[0];
-
-    if (selectedImage) {
-        // Use Tesseract.js to perform OCR on the image
-        Tesseract.recognize(
-            selectedImage,
-            'eng', // language: English
-            {
-                logger: (info) => {
-                    if (info.status === 'done') {
-                        // OCR is done, extract the text
-                        const extractedText = info.data.text;
-                        processExtractedText(extractedText);
-                    }
-                }
-            }
-        );
-    }
-}
-
-function processExtractedText(extractedText) {
-    // Split the extracted text into lines
-    const lines = extractedText.split('\n');
-
-    // Define a mapping of product names to the corresponding table input names
-    const productMapping = {
-        'Organic Homo': 'Organic Whole Milk',
-        'Organic 2% Milk': 'Organic 2% Milk',
-        // Add more mappings for other products
-    };
-
-    // Get a reference to the scan document button
-const scanDocumentButton = document.getElementById("scanDocumentButton");
-
-// Add a click event listener to the scan document button
-scanDocumentButton.addEventListener("click", () => {
-    // Log a message to the console to check if the button click is registered
-    console.log("Scan Document button clicked");
-
-    // Request access to the camera
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-            // Create a video element to display the camera stream
-            const video = document.createElement("video");
-            video.setAttribute("autoplay", true);
-            video.srcObject = stream;
-
-            // Append the video element to the document body
-            document.body.appendChild(video);
-        })
-        .catch((error) => {
-            // Log any errors to the console
-            console.error("Error accessing camera:", error);
-        });
-});
-
-
-    // Iterate through each line and update the corresponding input in the table
-    lines.forEach((line) => {
-        // Extract product name and quantity from the line
-        const match = line.match(/^(.+):\s*(\d+)/);
-        if (match) {
-            const productName = match[1];
-            const quantity = match[2];
-
-            // Check if the product is in the mapping
-            if (productMapping.hasOwnProperty(productName)) {
-                // Get the corresponding input element in the table
-                const inputName = productMapping[productName];
-                const inputElement = document.querySelector(`input[name="${inputName}"]`);
-
-                // Update the input value with the extracted quantity
-                if (inputElement) {
-                    inputElement.value = quantity;
-                }
+  }
+  
+  // Function to extract relevant information from the scanned text
+  function extractInfoFromOCR(scannedText) {
+    const scannedInfo = {};
+  
+    // Example: Extract product names and quantities from the scanned text
+    const productRegex = /(\w+) \d+ cases/g;
+    const matches = [...scannedText.matchAll(productRegex)];
+  
+    matches.forEach((match) => {
+        const productName = match[1];
+        const quantityRegex = new RegExp(`${productName} (\\d+) cases`);
+        const quantityMatch = scannedText.match(quantityRegex);
+        const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 0;
+  
+        // Add the product and quantity to the scannedInfo object
+        scannedInfo[productName] = quantity;
+    });
+  
+    return scannedInfo;
+  }
+  
+  // Function to update the order form with the scanned information
+  function updateOrderForm(scannedInfo) {
+    // Loop through the scannedInfo object and update the corresponding input fields
+    for (const productName in scannedInfo) {
+        const quantity = scannedInfo[productName];
+  
+        // Find the th element with the corresponding data-product attribute
+        const productHeader = document.querySelector(`th[data-product="${productName}"]`);
+  
+        if (productHeader) {
+            // Find the input field for the product under the same data-product
+            const inputField = productHeader.nextElementSibling.querySelector('input');
+  
+            if (inputField) {
+                // Update the input field with the quantity
+                inputField.value = quantity;
             }
         }
+    }
+  }
+  
+  
+  // Function to extract relevant information from the scanned text
+  function extractInfoFromOCR(scannedText) {
+    const scannedInfo = {};
+  
+    // Example: Extract product names and quantities from the scanned text
+    const productRegex = /(\w+) \d+ cases/g;
+    const matches = [...scannedText.matchAll(productRegex)];
+  
+    matches.forEach((match) => {
+      const productName = match[1];
+      const quantityRegex = new RegExp(`${productName} (\\d+) cases`);
+      const quantityMatch = scannedText.match(quantityRegex);
+      const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 0;
+  
+      // Add the product and quantity to the scannedInfo object
+      scannedInfo[productName] = quantity;
     });
-
-    // You can add more specific logic based on your document structure
-    // or handle cases where the OCR might not perfectly extract the information.
-}
-
-// Function to open the camera and capture a photo
-function openCamera() {
-    const constraints = { video: true };
   
-    navigator.mediaDevices.getUserMedia(constraints)
-      .then((stream) => {
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        document.body.appendChild(video);
-  
-        // Wait for the video to be loaded and playing
-        video.onloadedmetadata = () => {
-          video.play();
-  
-          // Capture a photo after a delay (adjust the delay as needed)
-          setTimeout(() => {
-            capturePhoto(video);
-          }, 1000);
-        };
-      })
-      .catch((error) => {
-        console.error('Error accessing camera:', error);
-      });
+    return scannedInfo;
   }
   
-  // Function to capture a photo from the video feed
-  function capturePhoto(video) {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // Function to update the table with the scanned information
+  function updateTable(scannedInfo) {
+    // Loop through the scannedInfo object and update the corresponding table cells
+    for (const productName in scannedInfo) {
+      const quantity = scannedInfo[productName];
   
-    // Get the data URL of the captured image
-    const dataUrl = canvas.toDataURL('image/png');
-  
-    // Do something with the captured image, e.g., send it to OCR
-    handleCapturedImage(dataUrl);
-  
-    // Cleanup: stop the video stream and remove the video element
-    video.srcObject.getTracks().forEach(track => track.stop());
-    document.body.removeChild(video);
+      // Example: Update the table cell for the product
+      const tableCell = document.querySelector(`td[data-product="${productName}"]`);
+      if (tableCell) {
+        tableCell.textContent = quantity;
+      }
+    }
   }
-  
-  // Function to handle the captured image (e.g., send it to OCR)
-  function handleCapturedImage(dataUrl) {
-    // You can perform OCR or any other processing with the captured image data
-    // For example, you can call your existing OCR function here
-    // performOCR(dataUrl);
-    console.log('Captured image data:', dataUrl);
-  }
-  
-  // Get a reference to the scan document button
-  const scanDocumentButton = document.getElementById("scanDocumentButton");
-  
-  // Add a click event listener to the scan document button
-  scanDocumentButton.addEventListener("click", openCamera);
-  
-  
-
-
-
-  
-  
-  
-  
