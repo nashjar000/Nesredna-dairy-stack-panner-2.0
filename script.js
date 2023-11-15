@@ -265,3 +265,52 @@ function checkPalletOrder(orderNumber) {
     });
   }
   
+  // Get a reference to the scan document button
+const scanDocumentButton = document.getElementById("scanDocumentButton");
+
+// Get a reference to the document image input
+const documentImageInput = document.getElementById("documentImageInput");
+
+// Add a click event listener to the scan document button
+scanDocumentButton.addEventListener("click", function () {
+  // Trigger the document image input
+  documentImageInput.click();
+});
+
+// Add a change event listener to the document image input
+documentImageInput.addEventListener("change", function (event) {
+  // Get the selected file (image)
+  const selectedImage = event.target.files[0];
+
+  // Perform image processing here
+  processImage(selectedImage);
+});
+
+// Function to process the selected image
+function processImage(image) {
+  // Perform image processing, e.g., using Tesseract.js
+  // Once processed, call the processExtractedText function with the extracted text
+}
+
+function processImage(image) {
+  Tesseract.recognize(
+    image,
+    'eng',  // Language code (e.g., 'eng' for English)
+    {
+      logger: info => console.log(info) // Log recognition progress (optional)
+    }
+  ).then(({ data: { text } }) => {
+    // Call the existing processExtractedText function with the extracted text
+    processExtractedText(text);
+  });
+}
+
+function processExtractedText(text) {
+  const products = [];
+
+  // ... (existing code to extract product information)
+
+  // Update the form fields with the extracted data
+  updateFormFields(products);
+}
+
