@@ -251,6 +251,66 @@ function handleImageCapture() {
         alert(`Image captured: ${imageUrl}`);
     }
 }
+
+function handleImageCapture() {
+    const selectedImage = documentImageInput.files[0];
+
+    if (selectedImage) {
+        // Use Tesseract.js to perform OCR on the image
+        Tesseract.recognize(
+            selectedImage,
+            'eng', // language: English
+            {
+                logger: (info) => {
+                    if (info.status === 'done') {
+                        // OCR is done, extract the text
+                        const extractedText = info.data.text;
+                        processExtractedText(extractedText);
+                    }
+                }
+            }
+        );
+    }
+}
+
+function processExtractedText(extractedText) {
+    // Split the extracted text into lines
+    const lines = extractedText.split('\n');
+
+    // Define a mapping of product names to the corresponding table input names
+    const productMapping = {
+        'Organic Whole Milk': 'Organic Whole Milk',
+        'Organic 2% Milk': 'Organic 2% Milk',
+        // Add more mappings for other products
+    };
+
+    // Iterate through each line and update the corresponding input in the table
+    lines.forEach((line) => {
+        // Extract product name and quantity from the line
+        const match = line.match(/^(.+):\s*(\d+)/);
+        if (match) {
+            const productName = match[1];
+            const quantity = match[2];
+
+            // Check if the product is in the mapping
+            if (productMapping.hasOwnProperty(productName)) {
+                // Get the corresponding input element in the table
+                const inputName = productMapping[productName];
+                const inputElement = document.querySelector(`input[name="${inputName}"]`);
+
+                // Update the input value with the extracted quantity
+                if (inputElement) {
+                    inputElement.value = quantity;
+                }
+            }
+        }
+    });
+
+    // You can add more specific logic based on your document structure
+    // or handle cases where the OCR might not perfectly extract the information.
+}
+
+
   
   
   
