@@ -225,4 +225,43 @@ function checkPalletOrder(orderNumber) {
   clearButton.addEventListener("click", function () {
     clearFormAndStacks();
   });
+
+  // Extracting text from photo
+
+  function processExtractedText(text) {
+    // Display the extracted text for now
+    alert(text);
+  }
+
+  function processExtractedText(text) {
+    const products = [];
+  
+    // Split the text into lines
+    const lines = text.split('\n');
+  
+    // Process each line
+    lines.forEach(line => {
+      // Split each line into product and quantity
+      const [productName, quantity] = line.split(':').map(item => item.trim());
+  
+      // Check if both product and quantity are present
+      if (productName && quantity && !isNaN(quantity)) {
+        // Store product information
+        products.push({ name: productName, quantity: parseInt(quantity, 10) });
+      }
+    });
+  
+    // Display the extracted products for now
+    alert(JSON.stringify(products));
+  }
+
+  function updateFormFields(products) {
+    // Update the form fields with the extracted data
+    products.forEach(product => {
+      const input = document.querySelector(`input[name="${product.name}"]`);
+      if (input) {
+        input.value = product.quantity;
+      }
+    });
+  }
   
