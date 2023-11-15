@@ -336,7 +336,7 @@ scanDocumentButton.addEventListener("click", () => {
     // or handle cases where the OCR might not perfectly extract the information.
 }
 
-// Function to open the camera
+// Function to open the camera and capture a photo
 function openCamera() {
     const constraints = { video: true };
   
@@ -344,12 +344,48 @@ function openCamera() {
       .then((stream) => {
         const video = document.createElement('video');
         video.srcObject = stream;
-        video.setAttribute('autoplay', true);
         document.body.appendChild(video);
+  
+        // Wait for the video to be loaded and playing
+        video.onloadedmetadata = () => {
+          video.play();
+  
+          // Capture a photo after a delay (adjust the delay as needed)
+          setTimeout(() => {
+            capturePhoto(video);
+          }, 1000);
+        };
       })
       .catch((error) => {
         console.error('Error accessing camera:', error);
       });
+  }
+  
+  // Function to capture a photo from the video feed
+  function capturePhoto(video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+    // Get the data URL of the captured image
+    const dataUrl = canvas.toDataURL('image/png');
+  
+    // Do something with the captured image, e.g., send it to OCR
+    handleCapturedImage(dataUrl);
+  
+    // Cleanup: stop the video stream and remove the video element
+    video.srcObject.getTracks().forEach(track => track.stop());
+    document.body.removeChild(video);
+  }
+  
+  // Function to handle the captured image (e.g., send it to OCR)
+  function handleCapturedImage(dataUrl) {
+    // You can perform OCR or any other processing with the captured image data
+    // For example, you can call your existing OCR function here
+    // performOCR(dataUrl);
+    console.log('Captured image data:', dataUrl);
   }
   
   // Get a reference to the scan document button
@@ -357,6 +393,7 @@ function openCamera() {
   
   // Add a click event listener to the scan document button
   scanDocumentButton.addEventListener("click", openCamera);
+  
   
 
 
