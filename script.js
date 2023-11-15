@@ -336,30 +336,28 @@ scanDocumentButton.addEventListener("click", () => {
     // or handle cases where the OCR might not perfectly extract the information.
 }
 
-// Get a reference to the scan document button
-const scanDocumentButton = document.getElementById("scanDocumentButton");
-
-// Add a click event listener to the scan document button
-scanDocumentButton.addEventListener("click", () => {
-    // Log a message to the console to check if the button click is registered
-    console.log("Scan Document button clicked");
-
-    // Request access to the camera
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-            // Create a video element to display the camera stream
-            const video = document.createElement("video");
-            video.setAttribute("autoplay", true);
-            video.srcObject = stream;
-
-            // Append the video element to the document body
-            document.body.appendChild(video);
-        })
-        .catch((error) => {
-            // Log any errors to the console
-            console.error("Error accessing camera:", error);
-        });
-});
+// Function to open the camera
+function openCamera() {
+    const constraints = { video: true };
+  
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then((stream) => {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.setAttribute('autoplay', true);
+        document.body.appendChild(video);
+      })
+      .catch((error) => {
+        console.error('Error accessing camera:', error);
+      });
+  }
+  
+  // Get a reference to the scan document button
+  const scanDocumentButton = document.getElementById("scanDocumentButton");
+  
+  // Add a click event listener to the scan document button
+  scanDocumentButton.addEventListener("click", openCamera);
+  
 
 
 
