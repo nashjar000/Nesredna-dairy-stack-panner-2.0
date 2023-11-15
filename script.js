@@ -310,6 +310,18 @@ function processExtractedText(extractedText) {
     // or handle cases where the OCR might not perfectly extract the information.
 }
 
+// Get a reference to the scan document button
+const scanDocumentButton = document.getElementById("scanDocumentButton");
+
+// Add a click event listener to the scan document button
+scanDocumentButton.addEventListener("click", () => {
+    // Log a message to the console to check if the button click is registered
+    console.log("Scan Document button clicked");
+
+    // Trigger the hidden input for image capture
+    documentImageInput.click();
+});
+
 
   
   
