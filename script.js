@@ -1,3 +1,5 @@
+const documentImageInput = document.getElementById("documentImageInput");
+
 // Function to check if the order number requires palletizing
 function checkPalletOrder(orderNumber) {
     const palletOrderNumbers = ["102", "106", "143", "163", "169"];
