@@ -279,10 +279,36 @@ function processExtractedText(extractedText) {
 
     // Define a mapping of product names to the corresponding table input names
     const productMapping = {
-        'Organic Whole Milk': 'Organic Whole Milk',
+        'Organic Homo': 'Organic Whole Milk',
         'Organic 2% Milk': 'Organic 2% Milk',
         // Add more mappings for other products
     };
+
+    // Get a reference to the scan document button
+const scanDocumentButton = document.getElementById("scanDocumentButton");
+
+// Add a click event listener to the scan document button
+scanDocumentButton.addEventListener("click", () => {
+    // Log a message to the console to check if the button click is registered
+    console.log("Scan Document button clicked");
+
+    // Request access to the camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+            // Create a video element to display the camera stream
+            const video = document.createElement("video");
+            video.setAttribute("autoplay", true);
+            video.srcObject = stream;
+
+            // Append the video element to the document body
+            document.body.appendChild(video);
+        })
+        .catch((error) => {
+            // Log any errors to the console
+            console.error("Error accessing camera:", error);
+        });
+});
+
 
     // Iterate through each line and update the corresponding input in the table
     lines.forEach((line) => {
