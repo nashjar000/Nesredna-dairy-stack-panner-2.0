@@ -175,8 +175,6 @@ function checkPalletOrder(orderNumber) {
     totalCasesElement.textContent = totalCases;
   }
   
-  // ... (previous code)
-  
   // Loop through the product quantities and plan the stacks
   for (const productName in productQuantities) {
     let quantity = productQuantities[productName];
@@ -228,6 +226,58 @@ function checkPalletOrder(orderNumber) {
     clearFormAndStacks();
   });
   
+// Function to open the camera and capture an image for OCR
+function openCameraForOCR() {
+    const constraints = { video: true };
+  
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then((stream) => {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        document.body.appendChild(video);
+  
+        // Wait for the video to be loaded and playing
+        video.onloadedmetadata = () => {
+          video.play();
+  
+          // Capture an image after a delay (adjust the delay as needed)
+          setTimeout(() => {
+            captureImageForOCR(video);
+          }, 1000);
+        };
+      })
+      .catch((error) => {
+        console.error('Error accessing camera:', error);
+      });
+  }
+  
+  // Function to capture an image from the video feed for OCR
+  function captureImageForOCR(video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+    // Get the data URL of the captured image
+    const dataUrl = canvas.toDataURL('image/png');
+  
+    // Perform OCR on the captured image
+    performOCR(dataUrl);
+  
+    // Cleanup: stop the video stream and remove the video element
+    video.srcObject.getTracks().forEach(track => track.stop());
+    document.body.removeChild(video);
+  }
+  
+  // Get a reference to the scan document button
+  const scanDocumentButton = document.getElementById("scanDocumentButton");
+  
+  // Add a click event listener to the scan document button
+  scanDocumentButton.addEventListener("click", openCameraForOCR);
+  
+  // Rest of your existing code...
+  
   // Function to handle OCR using Tesseract.js
   async function performOCR(image) {
     const result = await Tesseract.recognize(
@@ -235,89 +285,20 @@ function checkPalletOrder(orderNumber) {
       'eng', // language code, you can change this if needed
       { logger: (info) => console.log(info) }
     );
-    return result.data.text.trim();
-  }
   
-  // Add a change event listener to the documentImageInput
-  documentImageInput.addEventListener("change", handleImageCapture);
+    // Extract relevant information from the scanned text
+    const scannedInfo = extractInfoFromOCR(result.data.text.trim());
   
-  async function handleImageCapture() {
-    const selectedImage = documentImageInput.files[0];
+    // Update the order form with the scanned information
+    updateOrderForm(scannedInfo);
   
-    if (selectedImage) {
-      const imageUrl = URL.createObjectURL(selectedImage);
-      
-      // Perform OCR on the selected image
-      const scannedText = await performOCR(imageUrl);
-  
-      // Extract relevant information from the scanned text (customize as needed)
-      const scannedInfo = extractInfoFromOCR(scannedText);
-  
-      // Update the order form with the scanned information
-      updateOrderForm(scannedInfo);
-  
-      // For demonstration purposes, display the scanned text
-      alert(`Scanned Text: ${scannedText}`);
-    }
-  }
-  
-  // Function to extract relevant information from the scanned text (customize as needed)
-  function extractInfoFromOCR(scannedText) {
-    // Example: Extract order number from the scanned text
-    const orderNumberRegex = /Order Number: (\w+)/;
-    const match = scannedText.match(orderNumberRegex);
-    const orderNumber = match ? match[1] : '';
-  
-    return {
-      orderNumber,
-      // Add more properties as needed based on your document content
-    };
-  }
-  
-  // Function to update the order form with the scanned information
-  function updateOrderForm(scannedInfo) {
-    // Example: Update the order number input
-    const orderNumberInput = document.getElementById("orderNumber");
-    orderNumberInput.value = scannedInfo.orderNumber;
-  
-    // Add more code to update other form fields based on the scanned information
-  }
-  
-  // Function to handle OCR using Tesseract.js
-  async function performOCR(image) {
-    const result = await Tesseract.recognize(
-      image,
-      'eng', // language code, you can change this if needed
-      { logger: (info) => console.log(info) }
-    );
-    return result.data.text.trim();
-  }
-  
-  // Add a change event listener to the documentImageInput
-  documentImageInput.addEventListener("change", handleImageCapture);
-  
-  async function handleImageCapture() {
-    const selectedImage = documentImageInput.files[0];
-  
-    if (selectedImage) {
-      const imageUrl = URL.createObjectURL(selectedImage);
-  
-      // Perform OCR on the selected image
-      const scannedText = await performOCR(imageUrl);
-  
-      // Extract relevant information from the scanned text
-      const scannedInfo = extractInfoFromOCR(scannedText);
-  
-      // Update the order form with the scanned information
-      updateOrderForm(scannedInfo);
-  
-      // For demonstration purposes, display the scanned text
-      alert(`Scanned Text: ${scannedText}`);
-    }
+    // For demonstration purposes, display the scanned text
+    alert(`Scanned Text: ${result.data.text.trim()}`);
   }
   
   // Function to extract relevant information from the scanned text
   function extractInfoFromOCR(scannedText) {
+    // Modify this function based on the structure of your scanned text
     // Example: Extract product names and quantities from the scanned text
     const productRegex = /(\w+) \d+ cases/g;
     const matches = [...scannedText.matchAll(productRegex)];
@@ -351,25 +332,3 @@ function checkPalletOrder(orderNumber) {
     }
   }
   
-  // Function to extract relevant information from the scanned text
-  function extractInfoFromOCR(scannedText) {
-    const scannedInfo = {};
-  
-    // Example: Extract product names and quantities from the scanned text
-    const productRegex = /(\w+) \d+ cases/g;
-    const matches = [...scannedText.matchAll(productRegex)];
-  
-    matches.forEach((match) => {
-      const productName = match[1];
-  
-      // Example: Extract quantity using a specific product name
-      const quantityRegex = new RegExp(`${productName}: (\\d+) cases`);
-      const quantityMatch = scannedText.match(quantityRegex);
-      const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 0;
-  
-      // Add the product and quantity to the scannedInfo object
-      scannedInfo[productName] = quantity;
-    });
-  
-    return scannedInfo;
-  }
