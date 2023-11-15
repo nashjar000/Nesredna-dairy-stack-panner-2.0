@@ -245,69 +245,84 @@ function checkPalletOrder(orderNumber) {
     const selectedImage = documentImageInput.files[0];
   
     if (selectedImage) {
-        const imageUrl = URL.createObjectURL(selectedImage);
+      const imageUrl = URL.createObjectURL(selectedImage);
+      
+      // Perform OCR on the selected image
+      const scannedText = await performOCR(imageUrl);
   
-        // Perform OCR on the selected image
-        const scannedText = await performOCR(imageUrl);
+      // Extract relevant information from the scanned text (customize as needed)
+      const scannedInfo = extractInfoFromOCR(scannedText);
   
-        // Extract relevant information from the scanned text
-        const scannedInfo = extractInfoFromOCR(scannedText);
+      // Update the order form with the scanned information
+      updateOrderForm(scannedInfo);
   
-        // Update the order form with the scanned information
-        updateOrderForm(scannedInfo);
+      // For demonstration purposes, display the scanned text
+      alert(`Scanned Text: ${scannedText}`);
     }
   }
   
-  // Function to extract relevant information from the scanned text
+  // Function to extract relevant information from the scanned text (customize as needed)
   function extractInfoFromOCR(scannedText) {
-    const scannedInfo = {};
+    // Example: Extract order number from the scanned text
+    const orderNumberRegex = /Order Number: (\w+)/;
+    const match = scannedText.match(orderNumberRegex);
+    const orderNumber = match ? match[1] : '';
   
-    // Example: Extract product names and quantities from the scanned text
-    const productRegex = /(\w+) \d+ cases/g;
-    const matches = [...scannedText.matchAll(productRegex)];
-  
-    matches.forEach((match) => {
-        const productName = match[1];
-        const quantityRegex = new RegExp(`${productName} (\\d+) cases`);
-        const quantityMatch = scannedText.match(quantityRegex);
-        const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 0;
-  
-        // Add the product and quantity to the scannedInfo object
-        scannedInfo[productName] = quantity;
-    });
-  
-    return scannedInfo;
+    return {
+      orderNumber,
+      // Add more properties as needed based on your document content
+    };
   }
   
   // Function to update the order form with the scanned information
   function updateOrderForm(scannedInfo) {
-    // Loop through the scannedInfo object and update the corresponding input fields
-    for (const productName in scannedInfo) {
-        const quantity = scannedInfo[productName];
+    // Example: Update the order number input
+    const orderNumberInput = document.getElementById("orderNumber");
+    orderNumberInput.value = scannedInfo.orderNumber;
   
-        // Find the th element with the corresponding data-product attribute
-        const productHeader = document.querySelector(`th[data-product="${productName}"]`);
+    // Add more code to update other form fields based on the scanned information
+  }
   
-        if (productHeader) {
-            // Find the input field for the product under the same data-product
-            const inputField = productHeader.nextElementSibling.querySelector('input');
+  // Function to handle OCR using Tesseract.js
+  async function performOCR(image) {
+    const result = await Tesseract.recognize(
+      image,
+      'eng', // language code, you can change this if needed
+      { logger: (info) => console.log(info) }
+    );
+    return result.data.text.trim();
+  }
   
-            if (inputField) {
-                // Update the input field with the quantity
-                inputField.value = quantity;
-            }
-        }
+  // Add a change event listener to the documentImageInput
+  documentImageInput.addEventListener("change", handleImageCapture);
+  
+  async function handleImageCapture() {
+    const selectedImage = documentImageInput.files[0];
+  
+    if (selectedImage) {
+      const imageUrl = URL.createObjectURL(selectedImage);
+  
+      // Perform OCR on the selected image
+      const scannedText = await performOCR(imageUrl);
+  
+      // Extract relevant information from the scanned text
+      const scannedInfo = extractInfoFromOCR(scannedText);
+  
+      // Update the order form with the scanned information
+      updateOrderForm(scannedInfo);
+  
+      // For demonstration purposes, display the scanned text
+      alert(`Scanned Text: ${scannedText}`);
     }
   }
   
-  
   // Function to extract relevant information from the scanned text
   function extractInfoFromOCR(scannedText) {
-    const scannedInfo = {};
-  
     // Example: Extract product names and quantities from the scanned text
     const productRegex = /(\w+) \d+ cases/g;
     const matches = [...scannedText.matchAll(productRegex)];
+  
+    const scannedInfo = {};
   
     matches.forEach((match) => {
       const productName = match[1];
@@ -322,16 +337,39 @@ function checkPalletOrder(orderNumber) {
     return scannedInfo;
   }
   
-  // Function to update the table with the scanned information
-  function updateTable(scannedInfo) {
-    // Loop through the scannedInfo object and update the corresponding table cells
+  // Function to update the order form with the scanned information
+  function updateOrderForm(scannedInfo) {
+    // Loop through the scannedInfo object and update the corresponding input fields
     for (const productName in scannedInfo) {
       const quantity = scannedInfo[productName];
   
-      // Example: Update the table cell for the product
-      const tableCell = document.querySelector(`td[data-product="${productName}"]`);
-      if (tableCell) {
-        tableCell.textContent = quantity;
+      // Example: Update the input field for the product
+      const inputField = document.querySelector(`input[name="${productName}"]`);
+      if (inputField) {
+        inputField.value = quantity;
       }
     }
+  }
+  
+  // Function to extract relevant information from the scanned text
+  function extractInfoFromOCR(scannedText) {
+    const scannedInfo = {};
+  
+    // Example: Extract product names and quantities from the scanned text
+    const productRegex = /(\w+) \d+ cases/g;
+    const matches = [...scannedText.matchAll(productRegex)];
+  
+    matches.forEach((match) => {
+      const productName = match[1];
+  
+      // Example: Extract quantity using a specific product name
+      const quantityRegex = new RegExp(`${productName}: (\\d+) cases`);
+      const quantityMatch = scannedText.match(quantityRegex);
+      const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 0;
+  
+      // Add the product and quantity to the scannedInfo object
+      scannedInfo[productName] = quantity;
+    });
+  
+    return scannedInfo;
   }
