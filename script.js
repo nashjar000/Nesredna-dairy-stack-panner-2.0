@@ -332,6 +332,28 @@ function handleImage() {
 
     reader.readAsDataURL(file);
   }
+
+  function processImage(image) {
+    Tesseract.recognize(
+      image,
+      'eng',
+      {
+        logger: info => console.log(info)
+      }
+    ).then(({ data: { text } }) => {
+      processExtractedText(text);
+    });
+  }
+  
+  // Function to process the extracted text
+  function processExtractedText(text) {
+    const products = [];
+  
+    // ... (existing code to extract product information)
+  
+    // Update the form fields with the extracted data
+    updateFormFields(products);
+  }
 }
 
 // Function to process the extracted text
