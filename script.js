@@ -229,11 +229,6 @@ function checkPalletOrder(orderNumber) {
   // Extracting text from photo
 
   function processExtractedText(text) {
-    // Display the extracted text for now
-    alert(text);
-  }
-
-  function processExtractedText(text) {
     const products = [];
   
     // Split the text into lines
@@ -251,10 +246,10 @@ function checkPalletOrder(orderNumber) {
       }
     });
   
-    // Display the extracted products for now
-    alert(JSON.stringify(products));
+    // Update the form fields with the extracted data
+    updateFormFields(products);
   }
-
+  
   function updateFormFields(products) {
     // Update the form fields with the extracted data
     products.forEach(product => {
