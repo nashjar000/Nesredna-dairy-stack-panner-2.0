@@ -14,60 +14,91 @@
 
     <button onclick="window.open('https://docs.google.com/spreadsheets/d/1oXbK6tAIXpTfpfc7Z-mk637kh_Dd8Hu3kdFfT7Hs5pc/edit#gid=0', '_blank')">Calculator for other milk order info</button>
 
-    <button id="scanDocumentButton" onclick="document.getElementById('documentImageInput').click()">Scan Document</button>
+    <button id="scanDocumentButton" onclick="startCamera()">Scan Document</button>
     <input type="file" accept="image/*" id="documentImageInput" style="display: none;" onchange="handleImage()">
     
     <script src="https://tesseract.projectnaptha.com/1.0.10/tesseract.dev.js"></script>
     <script>
+        function startCamera() {
+            const constraints = {
+                video: { facingMode: { exact: 'environment' } }
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(function (stream) {
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    document.body.appendChild(video);
+                    video.play();
+
+                    video.onloadedmetadata = function () {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const context = canvas.getContext('2d');
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        // Stop the stream and remove the video element
+                        stream.getTracks().forEach(track => track.stop());
+                        document.body.removeChild(video);
+
+                        // Process the captured image
+                        processImage(canvas.toDataURL());
+                    };
+                })
+                .catch(function (error) {
+                    console.error('Error accessing the camera: ', error);
+                });
+        }
+
         function handleImage() {
-    const input = document.getElementById('documentImageInput');
-    const file = input.files[0];
+            const input = document.getElementById('documentImageInput');
+            const file = input.files[0];
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const imageSrc = e.target.result;
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imageSrc = e.target.result;
+                    // Use Tesseract.js to process the image
+                    Tesseract.recognize(
+                        imageSrc,
+                        'eng', // English language
+                        { logger: info => console.log(info) } // Optional logger function for debugging
+                    ).then(({ data: { text } }) => {
+                        // Process the extracted text (step 3)
+                        processExtractedText(text);
+                    });
+                };
 
-        // Use Tesseract.js to process the image
-        Tesseract.recognize(
-          imageSrc,
-          'eng', // English language
-          { logger: info => console.log(info) } // Optional logger function for debugging
-        ).then(({ data: { text } }) => {
-          // Process the extracted text (step 3)
-          processExtractedText(text);
-        });
-      };
+                reader.readAsDataURL(file);
+            }
+        }
 
-      reader.readAsDataURL(file);
-    }
-  }
+        function processExtractedText(text) {
+            // Implement logic to analyze the extracted text and update the form fields (step 4)
+            // This would involve parsing the text and identifying product names and quantities
+            // For simplicity, let's assume the text is structured with product names and quantities.
+            const products = [
+                { name: 'Organic Homo', quantity: 10 },
+                // Add other products...
+            ];
 
-  function processExtractedText(text) {
-    // Implement logic to analyze the extracted text and update the form fields (step 4)
-    // This would involve parsing the text and identifying product names and quantities
-    // For simplicity, let's assume the text is structured with product names and quantities.
-    const products = [
-      { name: 'Organic Homo', quantity: 10 },
-      // Add other products...
-    ];
+            // Update form fields with the extracted data
+            updateFormFields(products);
+        }
 
-    // Update form fields with the extracted data
-    updateFormFields(products);
-  }
-
-  function updateFormFields(products) {
-    // Implement logic to update the form fields based on the extracted data (step 5)
-    // You may need to match product names and set corresponding input values
-    const inputs = document.querySelectorAll('input[type="number"]');
-    inputs.forEach(input => {
-      const productName = input.name;
-      const product = products.find(p => p.name === productName);
-      if (product) {
-        input.value = product.quantity;
-      }
-    });
-  }
+        function updateFormFields(products) {
+            // Implement logic to update the form fields based on the extracted data (step 5)
+            // You may need to match product names and set corresponding input values
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                const productName = input.name;
+                const product = products.find(p => p.name === productName);
+                if (product) {
+                    input.value = product.quantity;
+                }
+            });
+        }
     </script>
 
     <form id="orderForm" action="#" method="post">
