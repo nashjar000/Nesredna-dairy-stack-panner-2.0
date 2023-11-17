@@ -314,3 +314,63 @@ function processExtractedText(text) {
   updateFormFields(products);
 }
 
+// Function to handle image selection
+function handleImage() {
+  const input = document.getElementById('documentImageInput');
+  const file = input.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const imageSrc = e.target.result;
+
+      // Use Tesseract.js to process the image
+      Tesseract.recognize(
+        imageSrc,
+        'eng', // English language
+        { logger: info => console.log(info) } // Optional logger function for debugging
+      ).then(({ data: { text } }) => {
+        // Process the extracted text
+        processExtractedText(text);
+      });
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
+// Function to process the extracted text
+function processExtractedText(text) {
+  const products = [];
+
+  // Split the text into lines
+  const lines = text.split('\n');
+
+  // Process each line
+  lines.forEach(line => {
+    // Split each line into product and quantity
+    const [productName, quantity] = line.split(':').map(item => item.trim());
+
+    // Check if both product and quantity are present
+    if (productName && quantity && !isNaN(quantity)) {
+      // Store product information
+      products.push({ name: productName, quantity: parseInt(quantity, 10) });
+    }
+  });
+
+  // Update the form fields with the extracted data
+  updateFormFields(products);
+}
+
+// Function to update the form fields
+function updateFormFields(products) {
+  // Update the form fields with the extracted data
+  products.forEach(product => {
+    const input = document.querySelector(`input[name="${product.name}"]`);
+    if (input) {
+      input.value = product.quantity;
+    }
+  });
+}
+
+
