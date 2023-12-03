@@ -470,3 +470,34 @@ getUserMedia({
   audio: false,
   video: { width: 1280, height: 720 },
 });
+
+async function startCamera() {
+  const constraints = { video: { facingMode: 'environment' } };
+  
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    document.body.appendChild(video);
+    video.play();
+    
+    video.onloadedmetadata = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Stop the stream and remove the video element
+      video.srcObject.getTracks().forEach(track => track.stop());
+      document.body.removeChild(video);
+
+      // Process the captured image
+      processImage(canvas.toDataURL());
+    };
+  } catch (error) {
+    console.error('Error accessing the camera:', error);
+  }
+}
+
