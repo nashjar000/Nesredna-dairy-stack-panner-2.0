@@ -501,3 +501,41 @@ async function startCamera() {
   }
 }
 
+// Get a reference to the select image button
+const selectImageButton = document.getElementById("selectImageButton");
+
+// Get a reference to the image input
+const imageInput = document.getElementById("imageInput");
+
+// Add a click event listener to the select image button
+selectImageButton.addEventListener("click", function () {
+  // Trigger the image input
+  imageInput.click();
+});
+
+// Add a change event listener to the image input
+imageInput.addEventListener("change", function (event) {
+  // Get the selected file (image)
+  const selectedImage = event.target.files[0];
+
+  // Process the selected image
+  processImage(selectedImage);
+});
+
+// Function to process the selected image
+function processImage(image) {
+  // Perform image processing, e.g., using Tesseract.js
+  // Once processed, call the processExtractedText function with the extracted text
+  Tesseract.recognize(
+    image,
+    'eng',  // Language code (e.g., 'eng' for English)
+    {
+      logger: info => console.log(info) // Log recognition progress (optional)
+    }
+  ).then(({ data: { text } }) => {
+    // Call the existing processExtractedText function with the extracted text
+    processExtractedText(text);
+  });
+}
+
+
