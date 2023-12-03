@@ -390,4 +390,60 @@ function updateFormFields(products) {
   });
 }
 
+// Function to start the camera on mobile devices
+function startCamera() {
+  const constraints = { video: { facingMode: 'environment' } };
+  const video = document.createElement('video');
+
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(function (stream) {
+      video.srcObject = stream;
+      document.body.appendChild(video);
+      video.play();
+    })
+    .catch(function (error) {
+      console.error('Error accessing the camera: ', error);
+    });
+
+  video.onloadedmetadata = function () {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Stop the stream and remove the video element
+    video.srcObject.getTracks().forEach(track => track.stop());
+    document.body.removeChild(video);
+
+    // Process the captured image
+    processImage(canvas.toDataURL());
+  };
+}
+
+// Function to handle image selection
+function handleImage() {
+  const input = document.getElementById('documentImageInput');
+  const file = input.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const imageSrc = e.target.result;
+
+      // Use Tesseract.js to process the image
+      Tesseract.recognize(
+        imageSrc,
+        'eng', // English language
+        { logger: info => console.log(info) } // Optional logger function for debugging
+      ).then(({ data: { text } }) => {
+        // Process the extracted text
+        processExtractedText(text);
+      });
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
 
