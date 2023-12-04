@@ -6,6 +6,8 @@ body, h1, form {
 
 #selectImageButton{
     background-color: green;
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 
 #selectImageButton:hover{
