@@ -269,3 +269,33 @@ function processExtractedText(text) {
   // Update your form fields or perform any other actions
   console.log(text);
 }
+
+function startCamera() {
+  const constraints = { video: { facingMode: 'environment' } };
+  const video = document.createElement('video');
+
+  navigator.mediaDevices.getUserMedia(constraints)
+      .then(function (stream) {
+          video.srcObject = stream;
+          document.body.appendChild(video);
+          video.play();
+      })
+      .catch(function (error) {
+          console.error('Error accessing the camera: ', error);
+      });
+
+  video.onloadedmetadata = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Stop the stream and remove the video element
+      video.srcObject.getTracks().forEach(track => track.stop());
+      document.body.removeChild(video);
+
+      // Process the captured image
+      processImage(canvas.toDataURL());
+  };
+}
